@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片展示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .gallery-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .gallery-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            aspect-ratio: 4/3;
+            background: #fff;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .gallery-item img, 
+        .gallery-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover img,
+        .gallery-item:hover video {
+            transform: scale(1.05);
+        }
+
+        .gallery-item .caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover .caption {
+            transform: translateY(0);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90vh;
+            margin: auto;
+        }
+
+        .modal-content img,
+        .modal-content video {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gallery-container">
+        <h1 class="gallery-title">照片展示</h1>
+        <div class="gallery-grid" id="galleryGrid">
+            <!-- 图片和视频将通过 JavaScript 动态添加 -->
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <span class="close-button" onclick="closeModal()">&times;</span>
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <script>
+        const mediaFiles = [
+            { type: 'image', src: '2/1.jpg', caption: '照片 1' },
+            { type: 'image', src: '2/2.jpg', caption: '照片 2' },
+            { type: 'image', src: '2/3.jpg', caption: '照片 3' },
+            { type: 'image', src: '2/4.jpg', caption: '照片 4' },
+            { type: 'image', src: '2/5.jpg', caption: '照片 5' },
+            { type: 'image', src: '2/6.jpg', caption: '照片 6' },
+            { type: 'image', src: '2/7.jpg', caption: '照片 7' },
+            { type: 'image', src: '2/8.jpg', caption: '照片 8' },
+            { type: 'image', src: '2/9.jpg', caption: '照片 9' },
+            { type: 'image', src: '2/10.jpg', caption: '照片 10' },
+            { type: 'image', src: '2/11.jpg', caption: '照片 11' },
+            { type: 'video', src: '2/10.mp4', caption: '视频' }
+        ];
+
+        const galleryGrid = document.getElementById('galleryGrid');
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modalContent');
+
+        // 创建图片和视频元素
+        mediaFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'gallery-item';
+            
+            let mediaElement;
+            if (file.type === 'image') {
+                mediaElement = document.createElement('img');
+                mediaElement.src = file.src;
+                mediaElement.alt = file.caption;
+            } else {
+                mediaElement = document.createElement('video');
+                mediaElement.src = file.src;
+                mediaElement.controls = true;
+            }
+
+            const caption = document.createElement('div');
+            caption.className = 'caption';
+            caption.textContent = file.caption;
+
+            item.appendChild(mediaElement);
+            item.appendChild(caption);
+            
+            // 点击事件
+            item.addEventListener('click', () => {
+                openModal(file);
+            });
+
+            galleryGrid.appendChild(item);
+        });
+
+        // 打开模态框
+        function openModal(file) {
+            modalContent.innerHTML = '';
+            let element;
+            
+            if (file.type === 'image') {
+                element = document.createElement('img');
+                element.src = file.src;
+                element.alt = file.caption;
+            } else {
+                element = document.createElement('video');
+                element.src = file.src;
+                element.controls = true;
+                element.autoplay = true;
+            }
+
+            modalContent.appendChild(element);
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            // 停止视频播放
+            const video = modalContent.querySelector('video');
+            if (video) {
+                video.pause();
+            }
+        }
+
+        // 点击模态框背景关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html> 
